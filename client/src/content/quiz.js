@@ -37,16 +37,6 @@ export const QUIZ = [
     ],
   },
   {
-    id: 'rehab',
-    q: 'A property needs a $25,000 renovation before it rents. How does that feel?',
-    options: [
-      { label: 'Terrifying. I want move-in ready.', pts: { steady: 2, builder: 0, accelerator: 0 } },
-      { label: 'Nervous, but I would try with guidance', pts: { steady: 1, builder: 2, accelerator: 0 } },
-      { label: 'Fine, if the numbers work', pts: { steady: 0, builder: 2, accelerator: 1 } },
-      { label: 'That is where the profit lives', pts: { steady: 0, builder: 1, accelerator: 2 } },
-    ],
-  },
-  {
     id: 'income',
     q: 'How stable is your current income?',
     options: [

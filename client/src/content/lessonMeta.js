@@ -1,6 +1,51 @@
 export const LESSON_META = {
+  mbl2: {
+    video: 'https://fast.wistia.com/medias/g5xe3t3bfj',
+    description: null,
+    resources: [],
+  },
+  mbl3: {
+    video: 'https://fast.wistia.com/medias/sh61wqduq9',
+    description: null,
+    resources: [],
+  },
+  mbl1: {
+    video: 'https://fast.wistia.com/medias/vt5kbja5pk',
+    description: null,
+    resources: [],
+  },
+  mbl4: {
+    video: 'https://fast.wistia.com/medias/agfdgcxi3x',
+    description: null,
+    resources: [],
+  },
+  mbl5: {
+    video: 'https://fast.wistia.com/medias/cgf842119n',
+    description: null,
+    resources: [],
+  },
+  mal3: {
+    video: 'https://fast.wistia.com/medias/746d6ds53y',
+    description: null,
+    resources: [],
+  },
+  mal1: {
+    video: 'https://fast.wistia.com/medias/f5623611ty',
+    description: null,
+    resources: [],
+  },
+  mal2: {
+    video: 'https://fast.wistia.com/medias/6em3gz3pw4',
+    description: null,
+    resources: [],
+  },
+  mal4: {
+    video: 'https://fast.wistia.com/medias/6gftxewir0',
+    description: null,
+    resources: [],
+  },
   m1l1: {
-    video: null, // URL added later when recorded
+    video: 'https://fast.wistia.com/medias/fdew0miumc', // URL added later when recorded
     description: 'I break down why Section 8 rentals produce steadier, government-backed cash flow than traditional rentals and where the edge really comes from.',
     resources: [
       { label: 'FMR & Rent Research Guide', to: '/vault/fmr-rent-research', kind: 'Guide' },
@@ -8,7 +53,7 @@ export const LESSON_META = {
     ],
   },
   m1l2: {
-    video: null, // URL added later when recorded
+    video: 'https://fast.wistia.com/medias/p0ps4csnwk', // URL added later when recorded
     description: 'A walk through how the Housing Choice Voucher program moves from applicant to approved tenant to the rent that lands in your account.',
     resources: [
       { label: 'RFTA & HAP Guide', to: '/vault/rfta-hap-guide', kind: 'Guide' },
@@ -16,7 +61,7 @@ export const LESSON_META = {
     ],
   },
   m1l3: {
-    video: null, // URL added later when recorded
+    video: 'https://fast.wistia.com/medias/mx00a0386w', // URL added later when recorded
     description: 'How Fair Market Rents and payment standards set your rent ceiling and exactly how and when the housing authority pays you.',
     resources: [
       { label: 'FMR & Rent Research Guide', to: '/vault/fmr-rent-research', kind: 'Guide' },
@@ -24,7 +69,7 @@ export const LESSON_META = {
     ],
   },
   m1l4: {
-    video: null, // URL added later when recorded
+    video: 'https://fast.wistia.com/medias/46nlnb75ca', // URL added later when recorded
     description: 'I address the common Section 8 myths about tenants, property damage, and payments so you can decide based on facts instead of fear.',
     resources: [
       { label: 'Tenant Screening Criteria', to: '/vault/tenant-screening-criteria', kind: 'Template' },

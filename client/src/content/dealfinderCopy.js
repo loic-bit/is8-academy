@@ -33,9 +33,9 @@ export default {
     'Works in any US market',
   ],
   pricing: {
-    trial: '30-day free trial',
-    price: '$25/month after',
-    note: 'Cancel anytime from your account. No contracts, no minimum term.',
+    trial: '35% off permanently for Cashflow 2.0 Academy members',
+    price: '$25/month after discount',
+    note: 'Use code CASHFLOW35 at checkout. Your Academy signup unlocks the permanent discount automatically.',
   },
   faq: [
     {

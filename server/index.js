@@ -20,6 +20,7 @@ import { sendEmail } from './mailer.js';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PORT = process.env.PORT || 3000;
 const JWT_SECRET = process.env.JWT_SECRET || 'dev-insecure-secret-change-me';
+const DEALFINDER_COUPON_CODE = process.env.DEALFINDER_COUPON_CODE || 'CASHFLOW35';
 
 // Refuse to boot in production with the insecure fallback secret — a missing
 // JWT_SECRET in prod would let anyone forge login tokens.
@@ -204,7 +205,12 @@ app.post('/api/auth/signup', async (req, res) => {
 
     res.json({
       token: signToken(user),
-      user: { ...publicUser(user), isAdmin: isRootAdmin(email) },
+      user: {
+        ...publicUser(user),
+        isAdmin: isRootAdmin(email),
+        couponEligible: true,
+        couponCode: DEALFINDER_COUPON_CODE,
+      },
     });
   } catch (e) {
     console.error('[signup]', e);
@@ -227,7 +233,12 @@ app.post('/api/auth/login', async (req, res) => {
     recordEvent(user.id, 'login', {});
     res.json({
       token: signToken(user),
-      user: { ...publicUser(user), isAdmin: isRootAdmin(user.email) || !!user.is_admin },
+      user: {
+        ...publicUser(user),
+        isAdmin: isRootAdmin(user.email) || !!user.is_admin,
+        couponEligible: true,
+        couponCode: DEALFINDER_COUPON_CODE,
+      },
     });
   } catch (e) {
     console.error('[login]', e);
@@ -291,7 +302,15 @@ app.post('/api/auth/reset', async (req, res) => {
   const hash = await bcrypt.hash(password, 10);
   await pool.query('UPDATE users SET password = $1 WHERE id = $2', [hash, user.id]);
   recordEvent(user.id, 'login', { via: 'password_reset' });
-  res.json({ token: signToken(user), user: { ...publicUser(user), isAdmin: isAdminUser(user) } });
+  res.json({
+    token: signToken(user),
+    user: {
+      ...publicUser(user),
+      isAdmin: isAdminUser(user),
+      couponEligible: true,
+      couponCode: DEALFINDER_COUPON_CODE,
+    },
+  });
 });
 
 app.get('/api/auth/me', authRequired, async (req, res) => {
@@ -301,7 +320,14 @@ app.get('/api/auth/me', authRequired, async (req, res) => {
   );
   if (!rows[0]) return res.status(401).json({ error: 'Unauthorized' });
   const { is_admin, ...u } = rows[0];
-  res.json({ user: { ...u, isAdmin: isRootAdmin(u.email) || !!is_admin } });
+  res.json({
+    user: {
+      ...u,
+      isAdmin: isRootAdmin(u.email) || !!is_admin,
+      couponEligible: true,
+      couponCode: DEALFINDER_COUPON_CODE,
+    },
+  });
 });
 
 // ── Course progress ───────────────────────────────────────────────────────

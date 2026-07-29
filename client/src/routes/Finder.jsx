@@ -11,6 +11,16 @@ const COUPON_CODE = import.meta.env.VITE_DEALFINDER_COUPON || 'CASHFLOW35';
 const EMBED_ENABLED = import.meta.env.VITE_DEALFINDER_EMBED === 'true';
 const REFERRER_SOURCE = 'cashflow20-academy';
 
+// Debug: log the config
+if (typeof window !== 'undefined') {
+  console.log('[Finder] Config:', {
+    EXTERNAL_URL,
+    COUPON_CODE,
+    EMBED_ENABLED,
+    raw_embed_value: import.meta.env.VITE_DEALFINDER_EMBED,
+  });
+}
+
 function buildDealfinderUrl(baseUrl) {
   if (!baseUrl) return '';
   try {

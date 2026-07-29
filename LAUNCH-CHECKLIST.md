@@ -21,6 +21,7 @@ Qualified-lead visibility = /admin: ranked call list (score, HOT/WARM/NURTURE/CO
 - [x] Airtable signup mirror (live since v1)
 
 ## GO/NO-GO SWITCHES (Loic)
+- [ ] GHL API key (+ location id) -> wires the GHL node in the n8n onboarding workflow (Discord ping already live)
 - [ ] Course videos → Loic sends embeds one by one → wire into lessonMeta.js + deploy each batch
 - [ ] ACTIVATE sequence 2838059 — one flip starts all 9,491 staged subscribers at email 1 (next 11am ET slot, Mon–Sat) AND makes new-signup enrollment work (enrollment 422s while inactive). Activate before/at traffic start. Say the word and it flips via API.
 - [ ] Admin accounts: sign up on the platform with the two admin emails (gate matches the ACCOUNT email; different emails = tell me, env updates in seconds)

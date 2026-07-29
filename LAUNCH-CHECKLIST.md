@@ -19,9 +19,10 @@ Qualified-lead visibility = /admin: ranked call list (score, HOT/WARM/NURTURE/CO
 - [x] 56-email sequence rebuilt by team as id 2838059, all 56 published, E50 4hr-course link filled (youtu.be/vFawo5bxTpc, UTM'd), 9,491 subscribers STAGED, sequence INACTIVE
 - [x] Analytics + lead scoring + /admin (shipped 2026-07-24)
 - [x] Airtable signup mirror (live since v1)
+- [x] Zapier CRM leg (cd7542f): ONBOARDING_WEBHOOK_URLS = n8n + https://hooks.zapier.com/hooks/catch/22006156/44jpou5/. Two events fire: account_created (every signup) + onboarding_form_completed (quiz, with qualification/dfySignal/answers). Both sample shapes sent to Zapier for Zap field-mapping; n8n branches per event (signup = one-line Discord ping, unknown events ignored); local e2e 4/4
 
 ## GO/NO-GO SWITCHES (Loic)
-- [ ] GHL API key (+ location id) -> wires the GHL node in the n8n onboarding workflow (Discord ping already live)
+- [ ] Zapier: build + turn ON the Zap behind hooks/catch/22006156/44jpou5 (both sample payloads already delivered for mapping; filter/branch on `event`). This IS the GHL leg now; the n8n GHL node stays a spare slot.
 - [ ] Course videos → Loic sends embeds one by one → wire into lessonMeta.js + deploy each batch
 - [ ] ACTIVATE sequence 2838059 — one flip starts all 9,491 staged subscribers at email 1 (next 11am ET slot, Mon–Sat) AND makes new-signup enrollment work (enrollment 422s while inactive). Activate before/at traffic start. Say the word and it flips via API.
 - [ ] Admin accounts: sign up on the platform with the two admin emails (gate matches the ACCOUNT email; different emails = tell me, env updates in seconds)

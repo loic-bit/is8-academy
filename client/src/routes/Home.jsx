@@ -19,10 +19,12 @@ export default function Home() {
   const { user } = useAuth();
   const [completed, setCompleted] = useState(new Set());
   const [dealsCount, setDealsCount] = useState(0);
+  const [quizDone, setQuizDone] = useState(true); // assume done until we know
 
   useEffect(() => {
     api('/progress').then((d) => setCompleted(new Set(d.completed))).catch(() => {});
     api('/deals').then((d) => setDealsCount((d.deals || []).length)).catch(() => {});
+    api('/quiz/me').then((d) => setQuizDone(!!d.result)).catch(() => {});
   }, []);
 
   const done = [...completed].filter((id) => !id.startsWith('unlock-')).length;
@@ -37,6 +39,19 @@ export default function Home() {
     <div>
       <div className="mb-2 font-display text-[26px] font-bold tracking-tight sm:text-3xl">Welcome back, {firstName}</div>
       <p className="mb-8 text-slate-500">Here is where you are and your next step toward owning doors.</p>
+
+      {!quizDone && (
+        <div className="card mb-6 flex flex-wrap items-center justify-between gap-4 border-brand/30 bg-brand/5">
+          <div className="min-w-0">
+            <div className="eyebrow mb-1">🧭 Start here</div>
+            <div className="font-display text-lg font-bold">Take the 2-minute Readiness Quiz</div>
+            <p className="text-sm text-slate-500">
+              It reads your capital, time, and experience, then hands you your investor profile and your first three moves.
+            </p>
+          </div>
+          <Link to="/quiz" className="btn-primary !py-2 text-sm">Start the quiz →</Link>
+        </div>
+      )}
 
       {/* Rank + continue hero */}
       <div className="mb-6 grid grid-cols-1 gap-4 lg:grid-cols-3">

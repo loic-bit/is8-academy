@@ -484,6 +484,8 @@ export default function Admin() {
               </div>
             )}
           </div>
+
+          <AdminsCard />
         </>
       )}
 
@@ -497,6 +499,116 @@ function Stat({ value, label }) {
     <div className="stat !p-4">
       <div className="stat-value !text-xl">{value}</div>
       <div className="stat-label">{label}</div>
+    </div>
+  );
+}
+
+// Quiet ops corner: who can see this dashboard. Root admins come from the
+// server config; managed admins are flipped via POST /admin/admins.
+function AdminsCard() {
+  const [data, setData] = useState(null);
+  const [failed, setFailed] = useState(false);
+  const [email, setEmail] = useState('');
+  const [error, setError] = useState('');
+  const [busy, setBusy] = useState(false);
+
+  function load() {
+    return api('/admin/admins')
+      .then((d) => {
+        setData(d);
+        setFailed(false);
+      })
+      .catch(() => setFailed(true));
+  }
+
+  useEffect(() => {
+    load();
+  }, []);
+
+  async function change(targetEmail, isAdmin) {
+    setError('');
+    setBusy(true);
+    try {
+      await api('/admin/admins', { method: 'POST', body: { email: targetEmail, isAdmin } });
+      if (isAdmin) setEmail('');
+      await load();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="card mt-6 max-w-xl">
+      <div className="eyebrow mb-1">Admins</div>
+      <p className="mb-4 text-sm text-slate-500">Who can see this dashboard.</p>
+
+      {failed ? (
+        <p className="text-sm text-slate-400">Could not load the admin list. Refresh to retry.</p>
+      ) : !data ? (
+        <p className="text-sm text-slate-400">Loading…</p>
+      ) : (
+        <div className="space-y-5">
+          <div>
+            <div className="label">Root · managed in server config</div>
+            <div className="flex flex-wrap gap-1.5">
+              {data.root.map((e) => (
+                <span key={e} className="chip !cursor-default !py-1 text-xs">
+                  {e}
+                </span>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <div className="label">Managed</div>
+            {data.managed.length === 0 ? (
+              <p className="text-sm text-slate-400">No managed admins yet.</p>
+            ) : (
+              <ul className="divide-y divide-slate-100">
+                {data.managed.map((a) => (
+                  <li key={a.id} className="flex items-center justify-between gap-3 py-2">
+                    <div className="min-w-0">
+                      <div className="truncate text-sm font-medium text-ink">{a.name}</div>
+                      <div className="truncate text-xs text-slate-400">{a.email}</div>
+                    </div>
+                    <button
+                      onClick={() => change(a.email, false)}
+                      disabled={busy}
+                      className="btn-ghost !px-3 !py-1.5 text-xs"
+                    >
+                      Remove
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+
+          {error && <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">{error}</p>}
+
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (email.trim()) change(email.trim(), true);
+            }}
+            className="flex gap-2"
+          >
+            <input
+              type="email"
+              className="field"
+              placeholder="email@example.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
+            <button className="btn-ghost whitespace-nowrap" disabled={busy}>
+              Add admin
+            </button>
+          </form>
+        </div>
+      )}
     </div>
   );
 }

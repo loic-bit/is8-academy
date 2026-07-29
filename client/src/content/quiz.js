@@ -86,6 +86,16 @@ export const QUIZ = [
       { label: 'Not sure yet', pts: { steady: 1, builder: 1, accelerator: 0 } },
     ],
   },
+  {
+    id: 'experience',
+    q: 'Where are you today with real estate?',
+    options: [
+      { label: 'Never bought anything, still learning', pts: { steady: 2, builder: 0, accelerator: 0 } },
+      { label: 'Been researching a while, ready to act', pts: { steady: 0, builder: 2, accelerator: 0 } },
+      { label: 'Own 1 to 3 properties', pts: { steady: 0, builder: 1, accelerator: 1 } },
+      { label: 'Own 4 or more, here to scale', pts: { steady: 0, builder: 0, accelerator: 2 } },
+    ],
+  },
 ];
 
 export const PROFILES = {

@@ -8,6 +8,7 @@ import { mirrorLeadToAirtable } from './airtable.js';
 import { mirrorSignupToKit } from './kit.js';
 import { EVENT_TYPES, LESSON_ID_RE, VALID_UNLOCKS, UNLOCK_PREFIX } from './scoring.js';
 import { registerAdminRoutes } from './admin.js';
+import { sendEmail } from './mailer.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PORT = process.env.PORT || 3000;
@@ -25,6 +26,33 @@ if (
 
 const app = express();
 app.use(express.json());
+
+// Baseline security headers on every response.
+app.use((_req, res, next) => {
+  res.set({
+    'X-Content-Type-Options': 'nosniff',
+    'X-Frame-Options': 'DENY',
+    'Referrer-Policy': 'strict-origin-when-cross-origin',
+  });
+  if (process.env.NODE_ENV === 'production') {
+    res.set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+  }
+  next();
+});
+
+// Tiny in-memory rate limiter for auth endpoints (single-instance service).
+// key -> array of attempt timestamps within the window.
+const rlBuckets = new Map();
+function rateLimit(key, max, windowMs) {
+  const now = Date.now();
+  const arr = (rlBuckets.get(key) || []).filter((t) => now - t < windowMs);
+  arr.push(now);
+  rlBuckets.set(key, arr);
+  if (rlBuckets.size > 10000) rlBuckets.clear(); // crude memory bound
+  return arr.length <= max;
+}
+const clientIp = (req) =>
+  (req.headers['x-forwarded-for'] || '').split(',')[0].trim() || req.socket.remoteAddress || '';
 
 // Route any async handler's rejection into Express instead of crashing the
 // process (Node kills on unhandled rejection). Applied at registration time.
@@ -57,10 +85,9 @@ function authRequired(req, res, next) {
   }
 }
 
-// Admins = ADMIN_EMAILS env (comma-separated), the single source of admin
-// truth: evaluated per request (never baked into the 30-day JWT, so a
-// redeploy revokes instantly). The users.is_admin column exists in the
-// schema but is deliberately unread until a real role system needs it.
+// Admin truth, evaluated per request (never baked into the 30-day JWT):
+// ADMIN_EMAILS env = root admins; users.is_admin = admins managed from the
+// /admin UI (see /api/admin/admins).
 const ADMIN_EMAILS = new Set(
   (process.env.ADMIN_EMAILS || '')
     .split(',')
@@ -68,10 +95,19 @@ const ADMIN_EMAILS = new Set(
     .filter(Boolean)
 );
 
-const isAdminUser = (user) => !!user?.email && ADMIN_EMAILS.has(user.email.toLowerCase());
+// Root admins come from env (cannot be removed in-app); additional admins
+// are managed from the /admin UI via users.is_admin. Checked per request.
+const isRootAdmin = (email) => ADMIN_EMAILS.has(String(email || '').toLowerCase());
 
-function adminRequired(req, res, next) {
-  if (isAdminUser(req.user)) return next();
+async function isAdminUser(user) {
+  if (!user?.email) return false;
+  if (isRootAdmin(user.email)) return true;
+  const { rows } = await pool.query('SELECT is_admin FROM users WHERE id = $1', [user.id]);
+  return !!rows[0]?.is_admin;
+}
+
+async function adminRequired(req, res, next) {
+  if (await isAdminUser(req.user)) return next();
   res.status(403).json({ error: 'Forbidden' });
 }
 
@@ -96,6 +132,9 @@ app.post('/api/auth/signup', async (req, res) => {
     const name = (req.body.name || '').trim();
     const email = (req.body.email || '').toLowerCase().trim();
     const password = req.body.password || '';
+    if (!rateLimit(`signup:${clientIp(req)}`, 20, 60 * 60_000)) {
+      return res.status(429).json({ error: 'Too many attempts. Try again later.' });
+    }
     if (!name || !email || !password) {
       return res.status(400).json({ error: 'Name, email and password are required.' });
     }
@@ -122,7 +161,7 @@ app.post('/api/auth/signup', async (req, res) => {
 
     res.json({
       token: signToken(user),
-      user: { ...publicUser(user), isAdmin: ADMIN_EMAILS.has(email) },
+      user: { ...publicUser(user), isAdmin: isRootAdmin(email) },
     });
   } catch (e) {
     console.error('[signup]', e);
@@ -134,6 +173,9 @@ app.post('/api/auth/login', async (req, res) => {
   try {
     const email = (req.body.email || '').toLowerCase().trim();
     const password = req.body.password || '';
+    if (!rateLimit(`login:${clientIp(req)}:${email}`, 10, 15 * 60_000)) {
+      return res.status(429).json({ error: 'Too many attempts. Try again in a few minutes.' });
+    }
     const { rows } = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
     const user = rows[0];
     if (!user || !(await bcrypt.compare(password, user.password))) {
@@ -142,7 +184,7 @@ app.post('/api/auth/login', async (req, res) => {
     recordEvent(user.id, 'login', {});
     res.json({
       token: signToken(user),
-      user: { ...publicUser(user), isAdmin: isAdminUser(user) },
+      user: { ...publicUser(user), isAdmin: isRootAdmin(user.email) || !!user.is_admin },
     });
   } catch (e) {
     console.error('[login]', e);
@@ -150,13 +192,73 @@ app.post('/api/auth/login', async (req, res) => {
   }
 });
 
+// ── Password reset ────────────────────────────────────────────────────────
+// Token = short-lived JWT bound to a slice of the CURRENT password hash, so
+// it is single-use by construction: once the password changes, the binding
+// no longer matches and the token dies. No extra table needed.
+app.post('/api/auth/forgot', async (req, res) => {
+  const email = (req.body.email || '').toLowerCase().trim();
+  if (!email) return res.status(400).json({ error: 'Email required.' });
+  if (!rateLimit(`forgot:${clientIp(req)}:${email}`, 5, 60 * 60_000)) {
+    return res.status(429).json({ error: 'Too many attempts. Try again later.' });
+  }
+  const { rows } = await pool.query('SELECT id, name, password FROM users WHERE email = $1', [
+    email,
+  ]);
+  if (rows[0]) {
+    const u = rows[0];
+    const token = jwt.sign(
+      { id: u.id, purpose: 'pwreset', h: u.password.slice(-12) },
+      JWT_SECRET,
+      { expiresIn: '1h' }
+    );
+    const base =
+      process.env.PUBLIC_BASE_URL || `${req.protocol}://${req.get('host')}`;
+    const link = `${base}/reset?token=${encodeURIComponent(token)}`;
+    sendEmail({
+      to: email,
+      subject: 'Reset your Cashflow 2.0 Academy password',
+      text: `Hey ${u.name.split(' ')[0]},\n\nSomeone (hopefully you) asked to reset your Academy password. This link works for 1 hour:\n\n${link}\n\nIf you didn't ask for this, ignore this email. Your password stays unchanged and your account is safe.\n\nCashflow 2.0 Academy`,
+    });
+  }
+  // Same response whether or not the account exists: no email enumeration.
+  res.json({ ok: true });
+});
+
+app.post('/api/auth/reset', async (req, res) => {
+  const token = (req.body.token || '').trim();
+  const password = req.body.password || '';
+  if (password.length < 8) {
+    return res.status(400).json({ error: 'Password must be at least 8 characters.' });
+  }
+  let claims;
+  try {
+    claims = jwt.verify(token, JWT_SECRET);
+    if (claims.purpose !== 'pwreset') throw new Error('wrong purpose');
+  } catch {
+    return res.status(400).json({ error: 'This reset link is invalid or expired.' });
+  }
+  const { rows } = await pool.query('SELECT id, name, email, password FROM users WHERE id = $1', [
+    claims.id,
+  ]);
+  const user = rows[0];
+  if (!user || user.password.slice(-12) !== claims.h) {
+    return res.status(400).json({ error: 'This reset link is invalid or expired.' });
+  }
+  const hash = await bcrypt.hash(password, 10);
+  await pool.query('UPDATE users SET password = $1 WHERE id = $2', [hash, user.id]);
+  recordEvent(user.id, 'login', { via: 'password_reset' });
+  res.json({ token: signToken(user), user: { ...publicUser(user), isAdmin: isAdminUser(user) } });
+});
+
 app.get('/api/auth/me', authRequired, async (req, res) => {
   const { rows } = await pool.query(
-    'SELECT id, name, email FROM users WHERE id = $1',
+    'SELECT id, name, email, is_admin FROM users WHERE id = $1',
     [req.user.id]
   );
   if (!rows[0]) return res.status(401).json({ error: 'Unauthorized' });
-  res.json({ user: { ...rows[0], isAdmin: isAdminUser(rows[0]) } });
+  const { is_admin, ...u } = rows[0];
+  res.json({ user: { ...u, isAdmin: isRootAdmin(u.email) || !!is_admin } });
 });
 
 // ── Course progress ───────────────────────────────────────────────────────
@@ -322,6 +424,40 @@ app.post('/api/quiz', authRequired, async (req, res) => {
   );
   recordEvent(req.user.id, 'quiz_completed', { winner, lowFidelity });
   res.json({ ok: true });
+});
+
+// ── Admin management (add/remove dashboard admins from the /admin UI) ────
+app.get('/api/admin/admins', authRequired, adminRequired, async (_req, res) => {
+  const { rows } = await pool.query(
+    'SELECT id, name, email FROM users WHERE is_admin = true ORDER BY name'
+  );
+  res.json({
+    root: [...ADMIN_EMAILS],
+    managed: rows.filter((r) => !isRootAdmin(r.email)),
+  });
+});
+
+app.post('/api/admin/admins', authRequired, adminRequired, async (req, res) => {
+  const email = (req.body.email || '').toLowerCase().trim();
+  const makeAdmin = !!req.body.isAdmin;
+  if (!email) return res.status(400).json({ error: 'Email required.' });
+  if (isRootAdmin(email)) {
+    return res.status(400).json({ error: 'Root admins are managed in the server config.' });
+  }
+  if (!makeAdmin && email === (req.user.email || '').toLowerCase()) {
+    return res.status(400).json({ error: 'You cannot remove your own admin access.' });
+  }
+  const { rows } = await pool.query(
+    'UPDATE users SET is_admin = $1 WHERE email = $2 RETURNING id, name, email',
+    [makeAdmin, email]
+  );
+  if (!rows[0]) {
+    return res
+      .status(404)
+      .json({ error: 'No account with that email. They need to sign up first.' });
+  }
+  recordEvent(req.user.id, 'login', { adminChange: email, isAdmin: makeAdmin });
+  res.json({ ok: true, user: rows[0] });
 });
 
 // ── Admin analytics API (registered via patched verbs, above the SPA

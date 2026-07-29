@@ -21,7 +21,7 @@ import {
 // and fell over past ~1k accounts.
 const USERS_AGG_SQL = `
   SELECT
-    u.id, u.name, u.email, u.created_at,
+    u.id, u.name, u.email, u.created_at, u.is_admin,
     GREATEST(u.last_seen, ev.last_event, cp.last_progress) AS last_seen,
     COALESCE(cp.lessons_done, 0) AS lessons_done,
     COALESCE(cp.checkpoints_passed, 0) AS checkpoints_passed,
@@ -103,7 +103,7 @@ export function registerAdminRoutes(app, { authRequired, adminRequired, isAdminE
     // Admin accounts are operators, not leads: their own testing activity
     // must never rank at the top of the sales call list.
     const users = rows
-      .filter((r) => !isAdminEmail(r.email))
+      .filter((r) => !isAdminEmail(r.email) && !r.is_admin)
       .map(decorate)
       .sort((a, b) => b.score - a.score || a.id - b.id);
     res.json({ users: users.slice(0, 2000), total: users.length });

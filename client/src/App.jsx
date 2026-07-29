@@ -3,6 +3,8 @@ import { useAuth } from './lib/auth.jsx';
 import DashboardLayout from './components/DashboardLayout.jsx';
 import Login from './routes/Login.jsx';
 import Signup from './routes/Signup.jsx';
+import Forgot from './routes/Forgot.jsx';
+import Reset from './routes/Reset.jsx';
 import Home from './routes/Home.jsx';
 import Course from './routes/Course.jsx';
 import Calculators from './routes/Calculators.jsx';
@@ -34,6 +36,8 @@ export default function App() {
     <Routes>
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<Signup />} />
+      <Route path="/forgot" element={<Forgot />} />
+      <Route path="/reset" element={<Reset />} />
 
       <Route
         path="/"

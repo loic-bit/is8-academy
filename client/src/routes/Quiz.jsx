@@ -1,11 +1,14 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { getToken } from '../lib/api.js';
-import { track } from '../lib/track.js';
+import { track, trackNow } from '../lib/track.js';
 import PageHeader from '../components/PageHeader.jsx';
 import { QUIZ, PROFILES, scoreQuiz } from '../content/quiz.js';
 
 const STORE_KEY = 'is8_quiz_result';
+
+const MENTORSHIP_URL =
+  import.meta.env.VITE_MENTORSHIP_URL || 'https://go.investingsection8.com/df82de5b';
 
 const readStored = () => {
   try {
@@ -93,6 +96,20 @@ export default function Quiz() {
               ))}
             </ol>
           </div>
+          {result.winner === 'accelerator' && (
+            <p className="mt-4 text-sm leading-relaxed text-slate-500">
+              Or skip a step:{' '}
+              <a
+                href={MENTORSHIP_URL}
+                target="_blank"
+                rel="noreferrer"
+                onClick={() => trackNow('calendar_click', { which: 'quiz-results-accelerator', href: MENTORSHIP_URL })}
+                className="font-medium text-brand hover:underline"
+              >
+                book the free game plan call →
+              </a>
+            </p>
+          )}
           <div className="mt-6 flex flex-wrap gap-3 border-t border-slate-100 pt-5">
             {p.links.map((l) => (
               <Link key={l.to} to={l.to} className="btn-primary !py-2 text-sm">{l.label} →</Link>

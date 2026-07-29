@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '../lib/api.js';
-import { track } from '../lib/track.js';
+import { track, trackNow } from '../lib/track.js';
 import PageHeader from '../components/PageHeader.jsx';
 import ContentBlocks from '../components/ContentBlocks.jsx';
 import ProgressRing from '../components/ProgressRing.jsx';
@@ -9,6 +9,9 @@ import Checkpoint from '../components/Checkpoint.jsx';
 import { LEVELS, TOTAL_LESSONS, levelOpen } from '../content/course.js';
 import { LESSON_META } from '../content/lessonMeta.js';
 import { rankFor } from '../content/checkpoints.js';
+
+const MENTORSHIP_URL =
+  import.meta.env.VITE_MENTORSHIP_URL || 'https://go.investingsection8.com/df82de5b';
 
 const moduleMinutes = (m) => m.lessons.reduce((n, l) => n + (l.minutes || 0), 0);
 
@@ -144,6 +147,35 @@ function VideoFrame({ video, title, lessonId }) {
         allowFullScreen
       />
     </div>
+  );
+}
+
+// Quiet mentor footnote under a lesson. Linkifies the phrase "free game plan
+// call" inside the note; lessons whose meta has no mentorNote render nothing.
+function MentorNote({ note, lessonId }) {
+  if (!note) return null;
+  const phrase = 'free game plan call';
+  const i = note.lastIndexOf(phrase);
+  return (
+    <p className="mt-6 text-sm italic leading-relaxed text-slate-500">
+      {i === -1 ? (
+        note
+      ) : (
+        <>
+          {note.slice(0, i)}
+          <a
+            href={MENTORSHIP_URL}
+            target="_blank"
+            rel="noreferrer"
+            onClick={() => trackNow('calendar_click', { which: 'lesson-' + lessonId, href: MENTORSHIP_URL })}
+            className="font-medium text-brand hover:underline"
+          >
+            {phrase}
+          </a>
+          {note.slice(i + phrase.length)}
+        </>
+      )}
+    </p>
   );
 }
 
@@ -349,6 +381,7 @@ export default function Course() {
                                         <ContentBlocks blocks={l.body || []} />
                                       </div>
                                       <ResourceList resources={meta.resources} lessonId={l.id} />
+                                      <MentorNote note={meta.mentorNote} lessonId={l.id} />
                                       <div className="mt-6 border-t border-slate-200/70 pt-5">
                                         <button
                                           onClick={() => toggle(l.id)}

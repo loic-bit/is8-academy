@@ -5,6 +5,9 @@ import { useToolTracking } from '../lib/useToolTracking.js';
 import PageHeader from '../components/PageHeader.jsx';
 import { money, pct, relTime } from '../lib/format.js';
 
+const MENTORSHIP_URL =
+  import.meta.env.VITE_MENTORSHIP_URL || 'https://go.investingsection8.com/df82de5b';
+
 const DEFAULTS = {
   purchasePrice: 120000,
   downPct: 25,
@@ -93,6 +96,7 @@ export default function Calculators() {
   const [editingId, setEditingId] = useState(null);
   const [editLabel, setEditLabel] = useState('');
   const [copiedId, setCopiedId] = useState(null);
+  const [firstDealNudge, setFirstDealNudge] = useState(false);
   const editRef = useRef(null);
 
   const r = useMemo(() => compute(v), [v]);
@@ -128,6 +132,7 @@ export default function Calculators() {
 
   async function saveDeal() {
     setSaving(true);
+    const wasFirstDeal = deals.length === 0;
     try {
       const label = `Deal @ ${money(v.purchasePrice)} · ${money(r.cashFlow)}/mo`;
       const url = normalizeUrl(listingUrl);
@@ -137,6 +142,7 @@ export default function Calculators() {
       });
       setDeals((prev) => [deal, ...prev]);
       setSaved(true);
+      if (wasFirstDeal) setFirstDealNudge(true);
     } catch {
       /* surfaced via disabled state; keep silent for v1 */
     } finally {
@@ -259,6 +265,29 @@ export default function Calculators() {
       {/* Saved deals */}
       <div className="mt-10">
         <h3 className="mb-4 text-lg font-bold">Saved deals</h3>
+        {firstDealNudge && (
+          <div className="mb-4 flex items-start justify-between gap-3 rounded-xl border border-slate-200 bg-white p-4">
+            <p className="min-w-0 flex-1 text-sm leading-relaxed text-slate-500">
+              Saved. If you ever want a second set of eyes on a deal, that is exactly what the free game plan call is for.{' '}
+              <a
+                href={MENTORSHIP_URL}
+                target="_blank"
+                rel="noreferrer"
+                onClick={() => trackNow('calendar_click', { which: 'deal-saved', href: MENTORSHIP_URL })}
+                className="font-medium text-brand hover:underline"
+              >
+                Book a free call →
+              </a>
+            </p>
+            <button
+              onClick={() => setFirstDealNudge(false)}
+              className="text-slate-300 hover:text-slate-500"
+              aria-label="Dismiss"
+            >
+              ✕
+            </button>
+          </div>
+        )}
         {deals.length === 0 ? (
           <div className="rounded-xl border border-dashed border-slate-300 bg-white p-8 text-center text-sm text-slate-500">
             No saved deals yet. Run the numbers above and hit <span className="font-semibold">Save this deal</span> to keep it here.

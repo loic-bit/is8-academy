@@ -83,6 +83,7 @@ export const LESSON_META = {
       { label: 'RFTA & HAP Guide', to: '/vault/rfta-hap-guide', kind: 'Guide' },
       { label: 'Property Management SOP', to: '/vault/property-management-sop', kind: 'SOP' },
     ],
+    mentorNote: 'When you get to a real conversation with a housing authority, you do not have to walk in alone. That is the kind of thing we prep together on a free game plan call.',
   },
   m2l1: {
     video: null, // URL added later when recorded
@@ -154,6 +155,7 @@ export const LESSON_META = {
       { label: 'Deal Calculator', to: '/calculators', kind: 'Tool' },
       { label: 'Deal Analysis Checklist', to: '/vault/deal-analysis-checklist', kind: 'Checklist' },
     ],
+    mentorNote: "First offers feel heavy. If you want my team's eyes on yours before you send it, that is what the free game plan call is for.",
   },
   m4l1: {
     video: null, // URL added later when recorded
@@ -202,6 +204,7 @@ export const LESSON_META = {
       { label: 'Financing Options Matrix', to: '/vault/financing-options-matrix', kind: 'Matrix' },
       { label: 'Deal Calculator', to: '/calculators', kind: 'Tool' },
     ],
+    mentorNote: 'Just ran this math for your own situation? Bring your number to a free game plan call. No pitch, just the map.',
   },
   m5l2: {
     video: null, // URL added later when recorded

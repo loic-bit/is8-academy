@@ -1,7 +1,10 @@
 import { useState } from 'react';
 import { api } from '../lib/api.js';
-import { track } from '../lib/track.js';
+import { track, trackNow } from '../lib/track.js';
 import { CHECKPOINTS } from '../content/checkpoints.js';
+
+const MENTORSHIP_URL =
+  import.meta.env.VITE_MENTORSHIP_URL || 'https://go.investingsection8.com/df82de5b';
 
 // Level checkpoint quiz. Pass 5/6 → POST the unlock pseudo-lesson to
 // course_progress → caller updates its completed set and celebrates.
@@ -92,6 +95,21 @@ export default function Checkpoint({ ckey, onPassed, onClose }) {
             <button onClick={onClose} className="btn-ghost">Keep studying first</button>
           )}
         </div>
+
+        {passed && (
+          <p className="mt-4 text-sm leading-relaxed text-slate-500">
+            If you want your first deal planned with my team beside you, the game plan call is free.{' '}
+            <a
+              href={MENTORSHIP_URL}
+              target="_blank"
+              rel="noreferrer"
+              onClick={() => trackNow('calendar_click', { which: 'checkpoint-pass', href: MENTORSHIP_URL })}
+              className="font-medium text-brand hover:underline"
+            >
+              Book it anytime →
+            </a>
+          </p>
+        )}
       </div>
     );
   }

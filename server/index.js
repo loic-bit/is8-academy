@@ -120,14 +120,24 @@ async function adminRequired(req, res, next) {
 
 // Onboarding-form completions fan out to team webhooks (n8n -> Discord/GHL).
 // Comma-separated URLs in ONBOARDING_WEBHOOK_URLS; fire-and-forget.
-function notifyOnboardingWebhooks({ user, winner, answers, answerLabels, lowFidelity }) {
+// Consumers (n8n, Zapier) branch on payload.event.
+function postWebhooks(payload) {
   const urls = (process.env.ONBOARDING_WEBHOOK_URLS || '')
     .split(',')
     .map((s) => s.trim())
     .filter(Boolean);
-  if (!urls.length) return;
+  for (const url of urls) {
+    fetch(url, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify(payload),
+    }).catch((e) => console.warn('[webhook]', e.message));
+  }
+}
+
+function notifyOnboardingWebhooks({ user, winner, answers, answerLabels, lowFidelity }) {
   const band = qualBand(answers, lowFidelity);
-  const payload = {
+  postWebhooks({
     event: 'onboarding_form_completed',
     at: new Date().toISOString(),
     user: { id: user.id, name: user.name, email: user.email },
@@ -136,14 +146,7 @@ function notifyOnboardingWebhooks({ user, winner, answers, answerLabels, lowFide
     dfySignal: dfySignal(answers),
     answers,
     answerLabels,
-  };
-  for (const url of urls) {
-    fetch(url, {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify(payload),
-    }).catch((e) => console.warn('[webhook]', e.message));
-  }
+  });
 }
 
 // Fire-and-forget server-side event. Analytics must never fail a request.
@@ -189,10 +192,15 @@ app.post('/api/auth/signup', async (req, res) => {
     );
     const user = rows[0];
 
-    // Mirror to CRM + email list — fire and forget, never blocks signup.
+    // Mirror to CRM + email list; fire and forget, never blocks signup.
     mirrorLeadToAirtable({ name, email });
     mirrorSignupToKit({ name, email });
     recordEvent(user.id, 'signup', {});
+    postWebhooks({
+      event: 'account_created',
+      at: new Date().toISOString(),
+      user: { id: user.id, name: user.name, email: user.email },
+    });
 
     res.json({
       token: signToken(user),

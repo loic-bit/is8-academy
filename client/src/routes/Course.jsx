@@ -18,6 +18,8 @@ function toEmbed(url) {
   if (yt) return `https://www.youtube.com/embed/${yt[1]}`;
   const vm = url.match(/vimeo\.com\/(\d+)/);
   if (vm) return `https://player.vimeo.com/video/${vm[1]}`;
+  const ws = url.match(/wistia\.(?:com|net)\/(?:medias|embed\/iframe|embed\/medias)\/([\w]+)/);
+  if (ws) return `https://fast.wistia.net/embed/iframe/${ws[1]}?videoFoam=true`;
   return url;
 }
 

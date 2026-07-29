@@ -32,7 +32,7 @@ export const LESSON_META = {
     ],
   },
   m1l5: {
-    video: null, // URL added later when recorded
+    video: 'https://fast.wistia.com/medias/sfn1um1glv', // URL added later when recorded
     description: 'How to build a working relationship with your local housing authority so your deals move faster and your questions get answered.',
     resources: [
       { label: 'RFTA & HAP Guide', to: '/vault/rfta-hap-guide', kind: 'Guide' },

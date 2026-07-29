@@ -38,6 +38,7 @@ export const EVENT_TYPES = new Set([
   'finder_trial_click',
   'calendar_click',
   'video_progress',
+  'welcome_modal',
   'login',
   'signup',
 ]);

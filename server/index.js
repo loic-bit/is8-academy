@@ -6,7 +6,14 @@ import jwt from 'jsonwebtoken';
 import { pool, initDb } from './db.js';
 import { mirrorLeadToAirtable } from './airtable.js';
 import { mirrorSignupToKit } from './kit.js';
-import { EVENT_TYPES, LESSON_ID_RE, VALID_UNLOCKS, UNLOCK_PREFIX } from './scoring.js';
+import {
+  EVENT_TYPES,
+  LESSON_ID_RE,
+  VALID_UNLOCKS,
+  UNLOCK_PREFIX,
+  qualBand,
+  dfySignal,
+} from './scoring.js';
 import { registerAdminRoutes } from './admin.js';
 import { sendEmail } from './mailer.js';
 
@@ -109,6 +116,34 @@ async function isAdminUser(user) {
 async function adminRequired(req, res, next) {
   if (await isAdminUser(req.user)) return next();
   res.status(403).json({ error: 'Forbidden' });
+}
+
+// Onboarding-form completions fan out to team webhooks (n8n -> Discord/GHL).
+// Comma-separated URLs in ONBOARDING_WEBHOOK_URLS; fire-and-forget.
+function notifyOnboardingWebhooks({ user, winner, answers, answerLabels, lowFidelity }) {
+  const urls = (process.env.ONBOARDING_WEBHOOK_URLS || '')
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean);
+  if (!urls.length) return;
+  const band = qualBand(answers, lowFidelity);
+  const payload = {
+    event: 'onboarding_form_completed',
+    at: new Date().toISOString(),
+    user: { id: user.id, name: user.name, email: user.email },
+    profile: winner,
+    qualification: { code: band.code, label: band.label },
+    dfySignal: dfySignal(answers),
+    answers,
+    answerLabels,
+  };
+  for (const url of urls) {
+    fetch(url, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify(payload),
+    }).catch((e) => console.warn('[webhook]', e.message));
+  }
 }
 
 // Fire-and-forget server-side event. Analytics must never fail a request.
@@ -423,6 +458,9 @@ app.post('/api/quiz', authRequired, async (req, res) => {
     [req.user.id, answers, answerLabels, totals, winner, lowFidelity]
   );
   recordEvent(req.user.id, 'quiz_completed', { winner, lowFidelity });
+  if (!lowFidelity) {
+    notifyOnboardingWebhooks({ user: req.user, winner, answers, answerLabels, lowFidelity });
+  }
   res.json({ ok: true });
 });
 

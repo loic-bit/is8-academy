@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../lib/auth.jsx';
 import { initTracking, track } from '../lib/track.js';
+import WelcomeModal from './WelcomeModal.jsx';
 import BrandMark from './BrandMark.jsx';
 
 // Five items. Calculators and quizzes live inside the Toolkit and are linked
@@ -83,6 +84,8 @@ export default function DashboardLayout() {
   }
 
   return (
+    <>
+    <WelcomeModal />
     <div className="flex min-h-full">
       {/* Static sidebar — tablet / desktop (md+) */}
       <aside className="hidden w-64 flex-col border-r border-slate-200 bg-white md:flex">
@@ -132,5 +135,6 @@ export default function DashboardLayout() {
         </main>
       </div>
     </div>
+    </>
   );
 }

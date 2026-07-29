@@ -1,6 +1,6 @@
 # Admin Analytics + Lead Scoring: Build Spec
 
-Requested by Loic 2026-07-21. Status: understand-phase running; design section to be completed from the codebase map before implementation.
+Requested by Loic 2026-07-21. **SHIPPED 2026-07-24 (commit d8f03ed).** Tracking is live and collecting for every user; /admin activates the moment ADMIN_EMAILS is set on the Railway service (comma-separated). Admin accounts are excluded from the lead list. activeMinutes = heartbeat count x 2 (120s visible-active beats). Phase 2 open: Airtable score sync (needs 5 fields on the Leads table + admin sync button). Ops note: prune events older than ~12 months once volume warrants; scoring is recency-driven.
 
 ## The idea (Loic's requirements, captured)
 The more of the free course someone consumes, the more nurtured and likely to buy the paid services. So:

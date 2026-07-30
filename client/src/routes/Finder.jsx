@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { useAuth } from '../lib/auth.jsx';
 import { api } from '../lib/api.js';
 import { trackNow } from '../lib/track.js';
 import COPY from '../content/dealfinderCopy.js';
@@ -34,17 +33,19 @@ function buildDealfinderUrl(baseUrl) {
 }
 
 export default function Finder() {
-  const { user } = useAuth();
   const [requested, setRequested] = useState(false);
   const [busy, setBusy] = useState(false);
   const [iframeLoaded, setIframeLoaded] = useState(false);
   const [bannerDismissed, setBannerDismissed] = useState(false);
   const iframeRef = useRef(null);
 
-  const couponEligible = user?.couponEligible !== false;
   const targetUrl = useMemo(() => buildDealfinderUrl(EXTERNAL_URL), []);
   const homeUrl = useMemo(() => buildDealfinderUrl(HOMEPAGE_URL), []);
-  const shouldEmbed = EMBED_ENABLED && couponEligible;
+  // `user.couponEligible` is hardcoded true server-side for every member, so
+  // it can't tell us who actually has a provisioned DealFinder account. Until
+  // there's a real activation signal, send everyone to the homepage (with the
+  // discount overlay) instead of the login-gated properties feed.
+  const shouldEmbed = false;
 
   useEffect(() => {
     api('/dealfinder/trial')
@@ -69,7 +70,7 @@ export default function Finder() {
 
   async function startTrial() {
     if (EXTERNAL_URL) {
-      trackNow('finder_trial_click', { via: 'external', couponEligible });
+      trackNow('finder_trial_click', { via: 'external' });
       api('/dealfinder/trial', { method: 'POST' }).catch(() => {});
       window.open(targetUrl || EXTERNAL_URL, '_blank', 'noreferrer');
       return;

@@ -35,7 +35,6 @@ function buildDealfinderUrl(baseUrl) {
 
 export default function Finder() {
   const [iframeLoaded, setIframeLoaded] = useState(false);
-  const [bannerDismissed, setBannerDismissed] = useState(false);
   const [copied, setCopied] = useState(false);
   // Which DealFinder page the iframe shows. Login/signup both stay inside
   // this same embed instead of popping a new tab.
@@ -86,7 +85,10 @@ export default function Finder() {
   function signUp() {
     trackNow('finder_trial_click', { via: 'homepage' });
     api('/dealfinder/trial', { method: 'POST' }).catch(() => {});
-    setBannerDismissed(true);
+    if (view !== 'home') {
+      setIframeLoaded(false);
+      setView('home');
+    }
   }
 
   function logIn() {
@@ -108,61 +110,48 @@ export default function Finder() {
 
   if (EMBED_ENABLED) {
     return (
-      <div className="relative h-full w-full bg-slate-50">
-        <iframe
-          ref={iframeRef}
-          src={iframeSrc}
-          title="Dealfinder AI"
-          className="h-full w-full border-0"
-          onLoad={() => setIframeLoaded(true)}
-        />
-
-        {view === 'login' && (
-          <button
-            onClick={backToHome}
-            className="absolute left-4 top-4 rounded-lg border border-slate-200 bg-white/95 px-3 py-1.5 text-xs font-semibold text-slate-600 shadow-sm hover:bg-white"
-          >
-            ← Back to DealFinder
-          </button>
-        )}
-
-        {view === 'home' && (
-          <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-slate-950/60 via-transparent to-transparent" />
-        )}
-
-        {view === 'home' && !bannerDismissed && (
-          <div
-            className="pointer-events-auto absolute left-1/2 top-6 w-[min(480px,calc(100%-2rem))] -translate-x-1/2 rounded-3xl border border-white/15 bg-white/95 p-6 shadow-2xl shadow-slate-950/20"
-            style={{ opacity: iframeLoaded ? 1 : 0, transition: 'opacity 200ms ease' }}
-          >
-            <button
-              onClick={() => setBannerDismissed(true)}
-              aria-label="Dismiss"
-              className="absolute right-4 top-4 text-slate-400 hover:text-slate-600"
-            >
-              ✕
+      <div className="flex h-full w-full flex-col bg-slate-50">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 bg-white px-4 py-2.5 sm:px-6">
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
+            <span className="font-display font-bold text-ink">DealFinder AI</span>
+            <span className="hidden text-slate-300 sm:inline">|</span>
+            <span className="text-slate-500">
+              Code <span className="font-semibold text-brand">{COUPON_CODE}</span> = 35% off for life
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <button onClick={copyCoupon} className="btn-ghost !px-3 !py-1.5 text-xs">
+              {copied ? 'Copied!' : 'Copy code'}
             </button>
-            <div className="text-sm font-semibold uppercase tracking-[0.22em] text-brand">DealFinder discount</div>
-            <h2 className="mt-3 text-2xl font-bold text-slate-900">Use code {COUPON_CODE} for 35% off for life</h2>
-            <p className="mt-2 text-sm text-slate-600">Open DealFinder now and the checkout discount is available for every eligible plan.</p>
-
-            <div className="mt-4 flex gap-3">
-              <button onClick={copyCoupon} className="btn-ghost flex-1">
-                {copied ? 'Copied!' : `Copy ${COUPON_CODE}`}
+            {view === 'login' ? (
+              <button onClick={backToHome} className="btn-ghost !px-3 !py-1.5 text-xs">
+                ← Home
               </button>
-              <button onClick={signUp} className="btn-primary flex-1">
-                Sign up
+            ) : (
+              <button onClick={logIn} className="btn-ghost !px-3 !py-1.5 text-xs">
+                Log in
               </button>
-            </div>
-
-            <button
-              onClick={logIn}
-              className="mt-3 w-full text-center text-xs font-medium text-slate-500 hover:text-slate-700 hover:underline"
-            >
-              Already have a DealFinder account? Log in
+            )}
+            <button onClick={signUp} className="btn-primary !px-3 !py-1.5 text-xs">
+              Sign up
             </button>
           </div>
-        )}
+        </div>
+
+        <div className="relative flex-1">
+          {!iframeLoaded && (
+            <div className="absolute inset-0 flex items-center justify-center text-sm text-slate-400">
+              Loading…
+            </div>
+          )}
+          <iframe
+            ref={iframeRef}
+            src={iframeSrc}
+            title="Dealfinder AI"
+            className="h-full w-full border-0"
+            onLoad={() => setIframeLoaded(true)}
+          />
+        </div>
       </div>
     );
   }

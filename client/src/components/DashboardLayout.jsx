@@ -66,6 +66,8 @@ export default function DashboardLayout() {
   const navigate = useNavigate();
   const location = useLocation();
   const [open, setOpen] = useState(false);
+  // AI Deal Finder renders a fullscreen embedded app, not the padded page shell.
+  const fullBleed = location.pathname === '/finder';
 
   // Analytics boot.
   useEffect(() => {
@@ -128,10 +130,14 @@ export default function DashboardLayout() {
           <BrandMark compact />
         </header>
 
-        <main className="min-w-0 flex-1 overflow-y-auto">
-          <div className="mx-auto max-w-5xl px-4 py-6 sm:px-6 md:px-8 md:py-10">
+        <main className={`min-w-0 flex-1 ${fullBleed ? 'overflow-hidden' : 'overflow-y-auto'}`}>
+          {fullBleed ? (
             <Outlet />
-          </div>
+          ) : (
+            <div className="mx-auto max-w-5xl px-4 py-6 sm:px-6 md:px-8 md:py-10">
+              <Outlet />
+            </div>
+          )}
         </main>
       </div>
     </div>

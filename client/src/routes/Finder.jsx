@@ -4,8 +4,9 @@ import { api } from '../lib/api.js';
 import { trackNow } from '../lib/track.js';
 import COPY from '../content/dealfinderCopy.js';
 
-// AI Deal Finder: the advanced-member product page. The academy now surfaces
-// it as a built-in experience with a permanent 35% coupon for Academy members.
+// AI Deal Finder: the advanced-member product page. The academy surfaces it
+// as a fullscreen embedded app (permanent 35% coupon for Academy members)
+// rather than a marketing page, so members land straight in the product.
 const EXTERNAL_URL =
   import.meta.env.VITE_DEALFINDER_URL ||
   'https://www.dealfinderai.org/properties?embed=1';
@@ -37,6 +38,7 @@ export default function Finder() {
   const [requested, setRequested] = useState(false);
   const [busy, setBusy] = useState(false);
   const [iframeLoaded, setIframeLoaded] = useState(false);
+  const [bannerDismissed, setBannerDismissed] = useState(false);
   const iframeRef = useRef(null);
 
   const couponEligible = user?.couponEligible !== false;
@@ -94,6 +96,43 @@ export default function Finder() {
       </button>
     );
 
+  if (EMBED_ENABLED) {
+    return (
+      <div className="relative h-full w-full bg-slate-50">
+        <iframe
+          ref={iframeRef}
+          src={(shouldEmbed ? targetUrl : homeUrl) || (shouldEmbed ? EXTERNAL_URL : HOMEPAGE_URL)}
+          title="Dealfinder AI"
+          className="h-full w-full border-0"
+          onLoad={() => setIframeLoaded(true)}
+        />
+
+        {!shouldEmbed && (
+          <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-slate-950/60 via-transparent to-transparent" />
+        )}
+
+        {!shouldEmbed && !bannerDismissed && (
+          <div
+            className="pointer-events-auto absolute left-1/2 top-6 w-[min(480px,calc(100%-2rem))] -translate-x-1/2 rounded-3xl border border-white/15 bg-white/95 p-6 shadow-2xl shadow-slate-950/20"
+            style={{ opacity: iframeLoaded ? 1 : 0, transition: 'opacity 200ms ease' }}
+          >
+            <button
+              onClick={() => setBannerDismissed(true)}
+              aria-label="Dismiss"
+              className="absolute right-4 top-4 text-slate-400 hover:text-slate-600"
+            >
+              ✕
+            </button>
+            <div className="text-sm font-semibold uppercase tracking-[0.22em] text-brand">DealFinder discount</div>
+            <h2 className="mt-3 text-2xl font-bold text-slate-900">Use code {COUPON_CODE} for 35% off for life</h2>
+            <p className="mt-2 text-sm text-slate-600">Open DealFinder now and the checkout discount is available for every eligible plan.</p>
+            <Cta className="mt-4 w-full" />
+          </div>
+        )}
+      </div>
+    );
+  }
+
   return (
     <div>
       <div className="mb-10 overflow-hidden rounded-2xl bg-gradient-to-br from-ink via-slate-800 to-brand-dark p-8 text-white sm:p-12">
@@ -105,40 +144,6 @@ export default function Finder() {
           <div className="text-sm text-white/60">
             <span className="font-semibold text-white">{COPY.pricing.trial}</span> · {COPY.pricing.price}
           </div>
-        </div>
-      </div>
-
-      <div className="mb-10">
-        <div className="card overflow-hidden p-0">
-          {shouldEmbed ? (
-            <div className="min-h-[calc(100vh-5rem)] bg-slate-50">
-              <iframe
-                ref={iframeRef}
-                src={targetUrl || EXTERNAL_URL}
-                title="Dealfinder AI"
-                className="h-full w-full border-0"
-                loading="lazy"
-                onLoad={() => setIframeLoaded(true)}
-              />
-            </div>
-          ) : (
-            <div className="relative min-h-[calc(100vh-5rem)] bg-slate-50">
-              <iframe
-                ref={iframeRef}
-                src={homeUrl || HOMEPAGE_URL}
-                title="Dealfinder AI Homepage"
-                className="h-full w-full border-0"
-                loading="lazy"
-                onLoad={() => setIframeLoaded(true)}
-              />
-              <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-slate-950/70 via-transparent to-transparent" />
-              <div className="pointer-events-auto absolute left-1/2 top-6 w-[min(480px,calc(100%-2rem))] -translate-x-1/2 rounded-3xl border border-white/15 bg-white/95 p-6 shadow-2xl shadow-slate-950/20" style={{ opacity: iframeLoaded ? 1 : 0, transition: 'opacity 200ms ease' }}>
-                <div className="text-sm font-semibold uppercase tracking-[0.22em] text-brand">DealFinder discount</div>
-                <h2 className="mt-3 text-2xl font-bold text-slate-900">Use code {COUPON_CODE} for 35% off for life</h2>
-                <p className="mt-2 text-sm text-slate-600">Open DealFinder now and the checkout discount is available for every eligible plan.</p>
-              </div>
-            </div>
-          )}
         </div>
       </div>
 

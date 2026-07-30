@@ -6,20 +6,13 @@ import COPY from '../content/dealfinderCopy.js';
 
 // AI Deal Finder: the advanced-member product page. The academy now surfaces
 // it as a built-in experience with a permanent 35% coupon for Academy members.
-const EXTERNAL_URL = import.meta.env.VITE_DEALFINDER_URL || '';
+const EXTERNAL_URL =
+  import.meta.env.VITE_DEALFINDER_URL ||
+  'https://www.dealfinderai.org/properties?embed=1';
 const COUPON_CODE = import.meta.env.VITE_DEALFINDER_COUPON || 'CASHFLOW35';
-const EMBED_ENABLED = import.meta.env.VITE_DEALFINDER_EMBED === 'true';
+const EMBED_ENABLED =
+  import.meta.env.VITE_DEALFINDER_EMBED !== 'false';
 const REFERRER_SOURCE = 'cashflow20-academy';
-
-// Debug: log the config
-if (typeof window !== 'undefined') {
-  console.log('[Finder] Config:', {
-    EXTERNAL_URL,
-    COUPON_CODE,
-    EMBED_ENABLED,
-    raw_embed_value: import.meta.env.VITE_DEALFINDER_EMBED,
-  });
-}
 
 function buildDealfinderUrl(baseUrl) {
   if (!baseUrl) return '';

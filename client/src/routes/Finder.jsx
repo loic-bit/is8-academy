@@ -9,6 +9,9 @@ import COPY from '../content/dealfinderCopy.js';
 const EXTERNAL_URL =
   import.meta.env.VITE_DEALFINDER_URL ||
   'https://www.dealfinderai.org/properties?embed=1';
+const HOMEPAGE_URL =
+  import.meta.env.VITE_DEALFINDER_HOME_URL ||
+  'https://www.dealfinderai.org/';
 const COUPON_CODE = import.meta.env.VITE_DEALFINDER_COUPON || 'CASHFLOW35';
 const EMBED_ENABLED =
   import.meta.env.VITE_DEALFINDER_EMBED !== 'false';
@@ -33,10 +36,13 @@ export default function Finder() {
   const { user } = useAuth();
   const [requested, setRequested] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [iframeLoaded, setIframeLoaded] = useState(false);
   const iframeRef = useRef(null);
 
   const couponEligible = user?.couponEligible !== false;
   const targetUrl = useMemo(() => buildDealfinderUrl(EXTERNAL_URL), []);
+  const homeUrl = useMemo(() => buildDealfinderUrl(HOMEPAGE_URL), []);
+  const shouldEmbed = EMBED_ENABLED && couponEligible;
 
   useEffect(() => {
     api('/dealfinder/trial')
@@ -102,52 +108,37 @@ export default function Finder() {
         </div>
       </div>
 
-      <div className="mb-10 grid grid-cols-1 gap-6 xl:grid-cols-[1.2fr_0.8fr]">
+      <div className="mb-10">
         <div className="card overflow-hidden p-0">
-          {EXTERNAL_URL && EMBED_ENABLED ? (
-            <div className="aspect-[16/10] bg-slate-50">
+          {shouldEmbed ? (
+            <div className="min-h-[calc(100vh-5rem)] bg-slate-50">
               <iframe
                 ref={iframeRef}
                 src={targetUrl || EXTERNAL_URL}
                 title="Dealfinder AI"
                 className="h-full w-full border-0"
                 loading="lazy"
+                onLoad={() => setIframeLoaded(true)}
               />
             </div>
           ) : (
-            <div className="p-6 sm:p-8">
-              <div className="eyebrow mb-3">Built into Cashflow 2.0 Academy</div>
-              <h2 className="font-display text-xl font-bold tracking-tight">Open the Dealfinder AI experience directly from the academy.</h2>
-              <p className="mt-2 leading-relaxed text-slate-500">
-                Academy members get a permanent 35% discount and can launch the product from here without leaving the site.
-              </p>
-              <Cta className="mt-6" />
+            <div className="relative min-h-[calc(100vh-5rem)] bg-slate-50">
+              <iframe
+                ref={iframeRef}
+                src={homeUrl || HOMEPAGE_URL}
+                title="Dealfinder AI Homepage"
+                className="h-full w-full border-0"
+                loading="lazy"
+                onLoad={() => setIframeLoaded(true)}
+              />
+              <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-slate-950/70 via-transparent to-transparent" />
+              <div className="pointer-events-auto absolute left-1/2 top-6 w-[min(480px,calc(100%-2rem))] -translate-x-1/2 rounded-3xl border border-white/15 bg-white/95 p-6 shadow-2xl shadow-slate-950/20" style={{ opacity: iframeLoaded ? 1 : 0, transition: 'opacity 200ms ease' }}>
+                <div className="text-sm font-semibold uppercase tracking-[0.22em] text-brand">DealFinder discount</div>
+                <h2 className="mt-3 text-2xl font-bold text-slate-900">Use code {COUPON_CODE} for 35% off for life</h2>
+                <p className="mt-2 text-sm text-slate-600">Open DealFinder now and the checkout discount is available for every eligible plan.</p>
+              </div>
             </div>
           )}
-        </div>
-
-        <div className="card flex flex-col justify-between border-brand/25 bg-brand/5">
-          <div>
-            <div className="eyebrow mb-3">Academy member perk</div>
-            <div className="font-display num text-4xl font-bold">35% <span className="text-lg text-slate-400">off</span></div>
-            <div className="mt-1 font-semibold text-brand">
-              {couponEligible ? `Permanent coupon unlocked for ${user?.name?.split(' ')[0] || 'you'}` : 'Coupon available to Academy members'}
-            </div>
-            <p className="mt-2 text-sm leading-relaxed text-slate-500">
-              Use code <span className="font-semibold text-brand">{COUPON_CODE}</span> at checkout. It is built into the academy experience and keeps working on the Dealfinder AI plan.
-            </p>
-          </div>
-          <div className="mt-6 space-y-3">
-            <Cta className="w-full" />
-            {EXTERNAL_URL && (
-              <button
-                onClick={() => window.open(targetUrl || EXTERNAL_URL, '_blank', 'noreferrer')}
-                className="btn-ghost w-full"
-              >
-                Open in a new tab
-              </button>
-            )}
-          </div>
         </div>
       </div>
 

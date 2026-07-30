@@ -37,15 +37,20 @@ export default function Finder() {
   const [iframeLoaded, setIframeLoaded] = useState(false);
   const [bannerDismissed, setBannerDismissed] = useState(false);
   const [copied, setCopied] = useState(false);
+  // Which DealFinder page the iframe shows. Login/signup both stay inside
+  // this same embed instead of popping a new tab.
+  const [view, setView] = useState('home');
   const iframeRef = useRef(null);
 
   const targetUrl = useMemo(() => buildDealfinderUrl(EXTERNAL_URL), []);
   const homeUrl = useMemo(() => buildDealfinderUrl(HOMEPAGE_URL), []);
   // `user.couponEligible` is hardcoded true server-side for every member, so
   // it can't tell us who actually has a provisioned DealFinder account. Until
-  // there's a real activation signal, send everyone to the homepage (with the
-  // discount overlay) instead of the login-gated properties feed.
-  const shouldEmbed = false;
+  // there's a real activation signal, everyone starts on the homepage (with
+  // the discount overlay) and can switch to the login view themselves.
+  const iframeSrc = view === 'login'
+    ? (targetUrl || EXTERNAL_URL)
+    : (homeUrl || HOMEPAGE_URL);
 
   useEffect(() => {
     if (!EMBED_ENABLED || !iframeRef.current) return;
@@ -81,12 +86,18 @@ export default function Finder() {
   function signUp() {
     trackNow('finder_trial_click', { via: 'homepage' });
     api('/dealfinder/trial', { method: 'POST' }).catch(() => {});
-    window.open(homeUrl || HOMEPAGE_URL, '_blank', 'noreferrer');
+    setBannerDismissed(true);
   }
 
   function logIn() {
     trackNow('finder_login_click');
-    window.open(targetUrl || EXTERNAL_URL, '_blank', 'noreferrer');
+    setIframeLoaded(false);
+    setView('login');
+  }
+
+  function backToHome() {
+    setIframeLoaded(false);
+    setView('home');
   }
 
   const Cta = ({ className = '' }) => (
@@ -100,17 +111,26 @@ export default function Finder() {
       <div className="relative h-full w-full bg-slate-50">
         <iframe
           ref={iframeRef}
-          src={(shouldEmbed ? targetUrl : homeUrl) || (shouldEmbed ? EXTERNAL_URL : HOMEPAGE_URL)}
+          src={iframeSrc}
           title="Dealfinder AI"
           className="h-full w-full border-0"
           onLoad={() => setIframeLoaded(true)}
         />
 
-        {!shouldEmbed && (
+        {view === 'login' && (
+          <button
+            onClick={backToHome}
+            className="absolute left-4 top-4 rounded-lg border border-slate-200 bg-white/95 px-3 py-1.5 text-xs font-semibold text-slate-600 shadow-sm hover:bg-white"
+          >
+            ← Back to DealFinder
+          </button>
+        )}
+
+        {view === 'home' && (
           <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-slate-950/60 via-transparent to-transparent" />
         )}
 
-        {!shouldEmbed && !bannerDismissed && (
+        {view === 'home' && !bannerDismissed && (
           <div
             className="pointer-events-auto absolute left-1/2 top-6 w-[min(480px,calc(100%-2rem))] -translate-x-1/2 rounded-3xl border border-white/15 bg-white/95 p-6 shadow-2xl shadow-slate-950/20"
             style={{ opacity: iframeLoaded ? 1 : 0, transition: 'opacity 200ms ease' }}

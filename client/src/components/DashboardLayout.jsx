@@ -11,7 +11,7 @@ const NAV = [
   { to: '/', label: 'Home', icon: '🏠', end: true },
   { to: '/course', label: 'The Course', icon: '🎓' },
   { to: '/vault', label: 'Toolkit', icon: '🧰' },
-  { to: '/finder', label: 'AI Deal Finder', icon: '✨', badge: 'Trial' },
+  { to: '/finder', label: 'DealFinder AI', icon: '✨', badge: 'Trial' },
   { to: '/get-help', label: 'Get Help', icon: '🤝' },
 ];
 
@@ -66,7 +66,7 @@ export default function DashboardLayout() {
   const navigate = useNavigate();
   const location = useLocation();
   const [open, setOpen] = useState(false);
-  // AI Deal Finder renders a fullscreen embedded app, not the padded page shell.
+  // DealFinder AI renders a fullscreen embedded app, not the padded page shell.
   const fullBleed = location.pathname === '/finder';
 
   // Analytics boot.

@@ -1,8 +1,8 @@
 export default {
-  eyebrow: 'AI Deal Finder',
+  eyebrow: 'DealFinder AI',
   headline: 'Never run out of deals to analyze',
   subhead:
-    'AI Deal Finder scans thousands of listings against Section 8 rents and your buy box, then hands you a ranked feed of cash flow candidates every day. You still verify. You still decide. You just never start from a blank search bar again.',
+    'DealFinder AI scans thousands of listings against Section 8 rents and your buy box, then hands you a ranked feed of cash flow candidates every day. You still verify. You still decide. You just never start from a blank search bar again.',
   problem: {
     h: 'At scale, the bottleneck is deal flow',
     p: 'When I bought my first property, finding one deal was the whole job. At 5, 10, or 20 doors, the job changes: you need a steady stream of candidates worth your time, and manually scanning listings for two hours every night does not scale. Most investors stall right here, not because the deals dried up, but because their search did.',
@@ -33,9 +33,9 @@ export default {
     'Works in any US market',
   ],
   pricing: {
-    trial: '35% off permanently for Cashflow 2.0 Academy members',
-    price: '$25/month after discount',
-    note: 'Use code CASHFLOW35 at checkout. Your Academy signup unlocks the permanent discount automatically.',
+    trial: '7-day free trial',
+    price: 'Normally $49/month — 35% off for life for Cashflow 2.0 Academy students ($31.85/month)',
+    note: 'Use code CASHFLOW35 at checkout to lock in 35% off for life. Your Academy signup unlocks the discount automatically.',
   },
   faq: [
     {
@@ -48,7 +48,7 @@ export default {
     },
     {
       q: 'What does it cost?',
-      a: 'Your first 30 days are free. After that it is 25 dollars per month, and you can cancel anytime. If it does not save you more than that in search time each month, cancel it.',
+      a: 'Every plan starts with a 7-day free trial. After that it is $49 a month, or $31.85 a month with the 35% Cashflow 2.0 Academy discount, and you can cancel anytime. If it does not save you more than that in search time each month, cancel it.',
     },
     {
       q: 'When do I get access?',

@@ -410,7 +410,7 @@ app.delete('/api/deals/:id', authRequired, async (req, res) => {
   res.json({ ok: true });
 });
 
-// ── AI Deal Finder trial requests ─────────────────────────────────────────
+// ── DealFinder AI trial requests ──────────────────────────────────────────
 app.get('/api/dealfinder/trial', authRequired, async (req, res) => {
   const { rows } = await pool.query(
     "SELECT created_at FROM trial_requests WHERE user_id = $1 AND product = 'dealfinder'",
@@ -429,7 +429,7 @@ app.post('/api/dealfinder/trial', authRequired, async (req, res) => {
   mirrorLeadToAirtable({
     name: req.user.name,
     email: req.user.email,
-    source: 'AI Deal Finder Trial',
+    source: 'DealFinder AI Trial',
   });
   recordEvent(req.user.id, 'finder_trial_click', { via: 'in_app' });
   res.json({ ok: true });

@@ -52,7 +52,7 @@ const EVENT_LABELS = {
   checkpoint_result: (p) => `Checkpoint ${p.passed ? 'passed' : 'attempted'}${p.checkpointId ? `: ${CHECKPOINT_NAMES[p.checkpointId] || p.checkpointId}` : ''}`,
   checkpoint_claimed: (p) => `Claimed checkpoint${p.lessonId ? `: ${CHECKPOINT_NAMES[p.lessonId] || p.lessonId}` : ''}`,
   checkpoint_retake: () => 'Retook a checkpoint',
-  finder_trial_click: () => 'Requested the Deal Finder trial',
+  finder_trial_click: () => 'Requested the DealFinder AI trial',
   calendar_click: () => 'Clicked booking link',
   video_progress: (p) => `Watched video to ${p.pct != null ? `${p.pct}%` : 'a milestone'}`,
   login: () => 'Logged in',

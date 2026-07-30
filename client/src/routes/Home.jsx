@@ -93,12 +93,12 @@ export default function Home() {
         ))}
       </div>
 
-      {/* AI Deal Finder */}
+      {/* DealFinder AI */}
       <div className="mt-8 overflow-hidden rounded-2xl bg-gradient-to-br from-ink via-slate-800 to-brand-dark p-6 text-white sm:p-8">
-        <div className="eyebrow mb-1 text-brand-light">✨ AI Deal Finder</div>
+        <div className="eyebrow mb-1 text-brand-light">✨ DealFinder AI</div>
         <h3 className="font-display text-xl font-bold tracking-tight">Never run out of deals to analyze</h3>
         <p className="mt-1 max-w-xl text-sm leading-relaxed text-white/75">
-          It scans listings against Section 8 rents and your buy box, then hands you a ranked feed of candidates daily. 30-day free trial, then $25 a month.
+          It scans listings against Section 8 rents and your buy box, then hands you a ranked feed of candidates daily. 7-day free trial, then $49/month — 35% off for life for Cashflow 2.0 Academy students.
         </p>
         <Link to="/finder" className="btn mt-4 bg-white text-ink hover:bg-slate-100">See how it works</Link>
       </div>

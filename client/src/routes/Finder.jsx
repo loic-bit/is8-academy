@@ -3,10 +3,10 @@ import { api } from '../lib/api.js';
 import { trackNow } from '../lib/track.js';
 import COPY from '../content/dealfinderCopy.js';
 
-// AI Deal Finder: the advanced-member product page. The academy surfaces it
-// as a fullscreen embedded app (permanent 35% coupon for Academy members)
+// DealFinder AI: the advanced-member product page. The academy surfaces it
+// as a fullscreen embedded app (permanent 35% coupon for Academy students)
 // rather than a marketing page, so members land straight in the product.
-// Signup is self-serve on DealFinder's side — no admin activation to wait on.
+// Signup is self-serve on DealFinder AI's side — no admin activation to wait on.
 const EXTERNAL_URL =
   import.meta.env.VITE_DEALFINDER_URL ||
   'https://www.dealfinderai.org/properties?embed=1';
@@ -36,7 +36,7 @@ function buildDealfinderUrl(baseUrl) {
 export default function Finder() {
   const [iframeLoaded, setIframeLoaded] = useState(false);
   const [copied, setCopied] = useState(false);
-  // Which DealFinder page the iframe shows. Login/signup both stay inside
+  // Which DealFinder AI page the iframe shows. Login/signup both stay inside
   // this same embed instead of popping a new tab.
   const [view, setView] = useState('home');
   const iframeRef = useRef(null);
@@ -44,7 +44,7 @@ export default function Finder() {
   const targetUrl = useMemo(() => buildDealfinderUrl(EXTERNAL_URL), []);
   const homeUrl = useMemo(() => buildDealfinderUrl(HOMEPAGE_URL), []);
   // `user.couponEligible` is hardcoded true server-side for every member, so
-  // it can't tell us who actually has a provisioned DealFinder account. Until
+  // it can't tell us who actually has a provisioned DealFinder AI account. Until
   // there's a real activation signal, everyone starts on the homepage (with
   // the discount overlay) and can switch to the login view themselves.
   const iframeSrc = view === 'login'
@@ -116,7 +116,7 @@ export default function Finder() {
             <span className="font-display font-bold text-ink">DealFinder AI</span>
             <span className="hidden text-slate-300 sm:inline">|</span>
             <span className="text-slate-500">
-              Code <span className="font-semibold text-brand">{COUPON_CODE}</span> = 35% off for life
+              7-day free trial · $49/mo · code <span className="font-semibold text-brand">{COUPON_CODE}</span> = 35% off for Cashflow 2.0 Academy students
             </span>
           </div>
           <div className="flex items-center gap-2">
@@ -147,7 +147,7 @@ export default function Finder() {
           <iframe
             ref={iframeRef}
             src={iframeSrc}
-            title="Dealfinder AI"
+            title="DealFinder AI"
             className="h-full w-full border-0"
             onLoad={() => setIframeLoaded(true)}
           />
@@ -203,8 +203,8 @@ export default function Finder() {
         <div className="card flex flex-col justify-between border-brand/25 bg-brand/5">
           <div>
             <div className="eyebrow mb-3">Simple pricing</div>
-            <div className="font-display num text-4xl font-bold">$25<span className="text-lg text-slate-400">/month</span></div>
-            <div className="mt-1 font-semibold text-brand">{COPY.pricing.trial}</div>
+            <div className="font-display num text-4xl font-bold">$49<span className="text-lg text-slate-400">/month</span></div>
+            <div className="mt-1 font-semibold text-brand">{COPY.pricing.trial} · 35% off for Cashflow 2.0 Academy students</div>
             <p className="mt-2 text-sm leading-relaxed text-slate-500">{COPY.pricing.note}</p>
           </div>
           <Cta className="mt-6 w-full" />

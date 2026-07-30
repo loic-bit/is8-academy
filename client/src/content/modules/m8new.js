@@ -48,9 +48,9 @@ export default {
         ] },
         { p: 'This works. I built my first portfolio on it. But it has a ceiling, and the ceiling is your hours. Every channel above is paid for in phone calls, follow ups, and screening time. Past a certain point you are spending 10 or more hours a week just filtering noise, and that is time you are not spending closing, refinancing, or managing.' },
         { h: 'How our members automate the top of the funnel' },
-        { p: 'This is exactly why we built the AI Deal Finder. It scans active listings against Section 8 rents, the FMR data for each county, and against your buy box: price range, bedroom count, target markets, minimum cash flow. Every day it surfaces the candidates that actually pencil, so your hours go into the last mile, walking properties and making offers, instead of the first mile of filtering.' },
-        { p: 'It comes with a 30-day free trial, then it is 25 dollars per month, and you can cancel anytime. It does not replace your agents or wholesalers. It sits on top of them and makes sure nothing cash-flowing in your markets slips past you.' },
-        { link: { to: '/finder', label: 'See how AI Deal Finder works' } },
+        { p: 'This is exactly why we built DealFinder AI. It scans active listings against Section 8 rents, the FMR data for each county, and against your buy box: price range, bedroom count, target markets, minimum cash flow. Every day it surfaces the candidates that actually pencil, so your hours go into the last mile, walking properties and making offers, instead of the first mile of filtering.' },
+        { p: 'It comes with a 7-day free trial, then it is $49 a month, and you can cancel anytime — Cashflow 2.0 Academy students get 35% off for life. It does not replace your agents or wholesalers. It sits on top of them and makes sure nothing cash-flowing in your markets slips past you.' },
+        { link: { to: '/finder', label: 'See how DealFinder AI works' } },
         { tip: 'Before you add any channel, manual or automated, write down your buy box using the worksheet: markets, price range, beds, condition, minimum cash flow per door. A machine can only feed you good deals if you have defined what a good deal is.' }
       ]
     }

@@ -52,7 +52,7 @@ export default {
     },
     {
       q: 'When do I get access?',
-      a: 'We activate trials within 24 hours of signup. You will get an email when your feed is live, and your first ranked candidates land the next morning.',
+      a: 'Instantly. Signup is self-serve, so you create your account and set your buy box right away, and your first ranked candidates land the next morning.',
     },
   ],
   cta: 'Start my free trial',

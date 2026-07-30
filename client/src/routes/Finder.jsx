@@ -6,6 +6,7 @@ import COPY from '../content/dealfinderCopy.js';
 // AI Deal Finder: the advanced-member product page. The academy surfaces it
 // as a fullscreen embedded app (permanent 35% coupon for Academy members)
 // rather than a marketing page, so members land straight in the product.
+// Signup is self-serve on DealFinder's side — no admin activation to wait on.
 const EXTERNAL_URL =
   import.meta.env.VITE_DEALFINDER_URL ||
   'https://www.dealfinderai.org/properties?embed=1';
@@ -33,8 +34,6 @@ function buildDealfinderUrl(baseUrl) {
 }
 
 export default function Finder() {
-  const [requested, setRequested] = useState(false);
-  const [busy, setBusy] = useState(false);
   const [iframeLoaded, setIframeLoaded] = useState(false);
   const [bannerDismissed, setBannerDismissed] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -47,12 +46,6 @@ export default function Finder() {
   // there's a real activation signal, send everyone to the homepage (with the
   // discount overlay) instead of the login-gated properties feed.
   const shouldEmbed = false;
-
-  useEffect(() => {
-    api('/dealfinder/trial')
-      .then((d) => setRequested(d.requested))
-      .catch(() => {});
-  }, []);
 
   useEffect(() => {
     if (!EMBED_ENABLED || !iframeRef.current) return;
@@ -69,22 +62,10 @@ export default function Finder() {
     return () => window.removeEventListener('message', handleMessage);
   }, []);
 
-  async function startTrial() {
-    if (EXTERNAL_URL) {
-      trackNow('finder_trial_click', { via: 'external' });
-      api('/dealfinder/trial', { method: 'POST' }).catch(() => {});
-      window.open(targetUrl || EXTERNAL_URL, '_blank', 'noreferrer');
-      return;
-    }
-    setBusy(true);
-    try {
-      await api('/dealfinder/trial', { method: 'POST' });
-      setRequested(true);
-    } catch {
-      /* button stays; they can retry */
-    } finally {
-      setBusy(false);
-    }
+  function startTrial() {
+    trackNow('finder_trial_click', { via: 'external' });
+    api('/dealfinder/trial', { method: 'POST' }).catch(() => {});
+    window.open(targetUrl || EXTERNAL_URL, '_blank', 'noreferrer');
   }
 
   async function copyCoupon() {
@@ -99,9 +80,7 @@ export default function Finder() {
 
   function signUp() {
     trackNow('finder_trial_click', { via: 'homepage' });
-    api('/dealfinder/trial', { method: 'POST' })
-      .then(() => setRequested(true))
-      .catch(() => {});
+    api('/dealfinder/trial', { method: 'POST' }).catch(() => {});
     window.open(homeUrl || HOMEPAGE_URL, '_blank', 'noreferrer');
   }
 
@@ -110,16 +89,11 @@ export default function Finder() {
     window.open(targetUrl || EXTERNAL_URL, '_blank', 'noreferrer');
   }
 
-  const Cta = ({ className = '' }) =>
-    requested ? (
-      <div className={`rounded-lg border border-brand/30 bg-brand/5 px-5 py-3.5 text-sm font-semibold text-brand ${className}`}>
-        ✓ Your access request is queued. We will activate it and email you once it is ready.
-      </div>
-    ) : (
-      <button onClick={startTrial} disabled={busy} className={`btn-primary ${className}`}>
-        {busy ? 'Opening…' : COPY.cta}
-      </button>
-    );
+  const Cta = ({ className = '' }) => (
+    <button onClick={startTrial} className={`btn-primary ${className}`}>
+      {COPY.cta}
+    </button>
+  );
 
   if (EMBED_ENABLED) {
     return (
@@ -152,20 +126,14 @@ export default function Finder() {
             <h2 className="mt-3 text-2xl font-bold text-slate-900">Use code {COUPON_CODE} for 35% off for life</h2>
             <p className="mt-2 text-sm text-slate-600">Open DealFinder now and the checkout discount is available for every eligible plan.</p>
 
-            {requested ? (
-              <div className="mt-4 rounded-lg border border-brand/30 bg-brand/5 px-4 py-3 text-sm font-semibold text-brand">
-                ✓ Your access request is queued. We will activate it and email you once it is ready.
-              </div>
-            ) : (
-              <div className="mt-4 flex gap-3">
-                <button onClick={copyCoupon} className="btn-ghost flex-1">
-                  {copied ? 'Copied!' : `Copy ${COUPON_CODE}`}
-                </button>
-                <button onClick={signUp} className="btn-primary flex-1">
-                  Sign up
-                </button>
-              </div>
-            )}
+            <div className="mt-4 flex gap-3">
+              <button onClick={copyCoupon} className="btn-ghost flex-1">
+                {copied ? 'Copied!' : `Copy ${COUPON_CODE}`}
+              </button>
+              <button onClick={signUp} className="btn-primary flex-1">
+                Sign up
+              </button>
+            </div>
 
             <button
               onClick={logIn}

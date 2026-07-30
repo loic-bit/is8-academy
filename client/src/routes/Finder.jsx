@@ -37,6 +37,7 @@ export default function Finder() {
   const [busy, setBusy] = useState(false);
   const [iframeLoaded, setIframeLoaded] = useState(false);
   const [bannerDismissed, setBannerDismissed] = useState(false);
+  const [copied, setCopied] = useState(false);
   const iframeRef = useRef(null);
 
   const targetUrl = useMemo(() => buildDealfinderUrl(EXTERNAL_URL), []);
@@ -86,6 +87,29 @@ export default function Finder() {
     }
   }
 
+  async function copyCoupon() {
+    try {
+      await navigator.clipboard.writeText(COUPON_CODE);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      /* clipboard unavailable; button just won't confirm */
+    }
+  }
+
+  function signUp() {
+    trackNow('finder_trial_click', { via: 'homepage' });
+    api('/dealfinder/trial', { method: 'POST' })
+      .then(() => setRequested(true))
+      .catch(() => {});
+    window.open(homeUrl || HOMEPAGE_URL, '_blank', 'noreferrer');
+  }
+
+  function logIn() {
+    trackNow('finder_login_click');
+    window.open(targetUrl || EXTERNAL_URL, '_blank', 'noreferrer');
+  }
+
   const Cta = ({ className = '' }) =>
     requested ? (
       <div className={`rounded-lg border border-brand/30 bg-brand/5 px-5 py-3.5 text-sm font-semibold text-brand ${className}`}>
@@ -127,7 +151,28 @@ export default function Finder() {
             <div className="text-sm font-semibold uppercase tracking-[0.22em] text-brand">DealFinder discount</div>
             <h2 className="mt-3 text-2xl font-bold text-slate-900">Use code {COUPON_CODE} for 35% off for life</h2>
             <p className="mt-2 text-sm text-slate-600">Open DealFinder now and the checkout discount is available for every eligible plan.</p>
-            <Cta className="mt-4 w-full" />
+
+            {requested ? (
+              <div className="mt-4 rounded-lg border border-brand/30 bg-brand/5 px-4 py-3 text-sm font-semibold text-brand">
+                ✓ Your access request is queued. We will activate it and email you once it is ready.
+              </div>
+            ) : (
+              <div className="mt-4 flex gap-3">
+                <button onClick={copyCoupon} className="btn-ghost flex-1">
+                  {copied ? 'Copied!' : `Copy ${COUPON_CODE}`}
+                </button>
+                <button onClick={signUp} className="btn-primary flex-1">
+                  Sign up
+                </button>
+              </div>
+            )}
+
+            <button
+              onClick={logIn}
+              className="mt-3 w-full text-center text-xs font-medium text-slate-500 hover:text-slate-700 hover:underline"
+            >
+              Already have a DealFinder account? Log in
+            </button>
           </div>
         )}
       </div>

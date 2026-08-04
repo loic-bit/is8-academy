@@ -316,7 +316,7 @@ app.post('/api/auth/reset', async (req, res) => {
     token: signToken(user),
     user: {
       ...publicUser(user),
-      isAdmin: isAdminUser(user),
+      isAdmin: await isAdminUser(user),
       couponEligible: true,
       couponCode: DEALFINDER_COUPON_CODE,
     },

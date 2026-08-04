@@ -6,7 +6,7 @@ import { AuthShell } from './Login.jsx';
 export default function Signup() {
   const { signup } = useAuth();
   const navigate = useNavigate();
-  const [form, setForm] = useState({ name: '', email: '', password: '' });
+  const [form, setForm] = useState({ name: '', email: '', phone: '', password: '' });
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
 
@@ -47,6 +47,16 @@ export default function Signup() {
             className="field"
             value={form.email}
             onChange={(e) => setForm({ ...form, email: e.target.value })}
+            required
+          />
+        </div>
+        <div>
+          <label className="label">Phone</label>
+          <input
+            type="tel"
+            className="field"
+            value={form.phone}
+            onChange={(e) => setForm({ ...form, phone: e.target.value })}
             required
           />
         </div>

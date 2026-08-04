@@ -107,6 +107,7 @@ async function runDdl(client) {
 
     ALTER TABLE users ADD COLUMN IF NOT EXISTS is_admin BOOLEAN NOT NULL DEFAULT false;
     ALTER TABLE users ADD COLUMN IF NOT EXISTS last_seen TIMESTAMPTZ;
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS phone TEXT;
   `);
   console.log('[db] schema ready');
 }

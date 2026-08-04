@@ -76,7 +76,7 @@ for (const m of ['get', 'post', 'patch', 'delete', 'put']) {
 // ── Auth helpers ────────────────────────────────────────────────────────
 function signToken(user) {
   return jwt.sign(
-    { id: user.id, email: user.email, name: user.name },
+    { id: user.id, email: user.email, name: user.name, phone: user.phone || '' },
     JWT_SECRET,
     { expiresIn: '30d' }
   );
@@ -122,6 +122,8 @@ async function adminRequired(req, res, next) {
 // Onboarding-form completions fan out to team webhooks (n8n -> Discord/GHL).
 // Comma-separated URLs in ONBOARDING_WEBHOOK_URLS; fire-and-forget.
 // Consumers (n8n, Zapier) branch on payload.event.
+// Payload fields are kept flat (no nested "user" object): Zapier's UI only
+// maps top-level fields, so a nested object is invisible to its editor.
 function postWebhooks(payload) {
   const urls = (process.env.ONBOARDING_WEBHOOK_URLS || '')
     .split(',')
@@ -141,7 +143,10 @@ function notifyOnboardingWebhooks({ user, winner, answers, answerLabels, lowFide
   postWebhooks({
     event: 'onboarding_form_completed',
     at: new Date().toISOString(),
-    user: { id: user.id, name: user.name, email: user.email },
+    userId: user.id,
+    name: user.name,
+    email: user.email,
+    phone: user.phone || '',
     profile: winner,
     qualification: { code: band.code, label: band.label },
     dfySignal: dfySignal(answers),
@@ -160,7 +165,7 @@ function recordEvent(userId, type, payload = {}, sessionId = null) {
     .catch((e) => console.warn('[events]', e.message));
 }
 
-const publicUser = (u) => ({ id: u.id, name: u.name, email: u.email });
+const publicUser = (u) => ({ id: u.id, name: u.name, email: u.email, phone: u.phone || '' });
 
 // ── Health ────────────────────────────────────────────────────────────────
 app.get('/api/health', (_req, res) => res.json({ ok: true }));
@@ -171,11 +176,12 @@ app.post('/api/auth/signup', async (req, res) => {
     const name = (req.body.name || '').trim();
     const email = (req.body.email || '').toLowerCase().trim();
     const password = req.body.password || '';
+    const phone = (req.body.phone || '').trim();
     if (!rateLimit(`signup:${clientIp(req)}`, 20, 60 * 60_000)) {
       return res.status(429).json({ error: 'Too many attempts. Try again later.' });
     }
-    if (!name || !email || !password) {
-      return res.status(400).json({ error: 'Name, email and password are required.' });
+    if (!name || !email || !password || !phone) {
+      return res.status(400).json({ error: 'Name, email, phone and password are required.' });
     }
     if (password.length < 8) {
       return res.status(400).json({ error: 'Password must be at least 8 characters.' });
@@ -188,8 +194,8 @@ app.post('/api/auth/signup', async (req, res) => {
 
     const hash = await bcrypt.hash(password, 10);
     const { rows } = await pool.query(
-      'INSERT INTO users (name, email, password) VALUES ($1, $2, $3) RETURNING id, name, email',
-      [name, email, hash]
+      'INSERT INTO users (name, email, password, phone) VALUES ($1, $2, $3, $4) RETURNING id, name, email, phone',
+      [name, email, hash, phone]
     );
     const user = rows[0];
 
@@ -200,7 +206,10 @@ app.post('/api/auth/signup', async (req, res) => {
     postWebhooks({
       event: 'account_created',
       at: new Date().toISOString(),
-      user: { id: user.id, name: user.name, email: user.email },
+      userId: user.id,
+      name: user.name,
+      email: user.email,
+      phone: user.phone,
     });
 
     res.json({
@@ -292,9 +301,10 @@ app.post('/api/auth/reset', async (req, res) => {
   } catch {
     return res.status(400).json({ error: 'This reset link is invalid or expired.' });
   }
-  const { rows } = await pool.query('SELECT id, name, email, password FROM users WHERE id = $1', [
-    claims.id,
-  ]);
+  const { rows } = await pool.query(
+    'SELECT id, name, email, phone, password FROM users WHERE id = $1',
+    [claims.id]
+  );
   const user = rows[0];
   if (!user || user.password.slice(-12) !== claims.h) {
     return res.status(400).json({ error: 'This reset link is invalid or expired.' });
@@ -315,7 +325,7 @@ app.post('/api/auth/reset', async (req, res) => {
 
 app.get('/api/auth/me', authRequired, async (req, res) => {
   const { rows } = await pool.query(
-    'SELECT id, name, email, is_admin FROM users WHERE id = $1',
+    'SELECT id, name, email, phone, is_admin FROM users WHERE id = $1',
     [req.user.id]
   );
   if (!rows[0]) return res.status(401).json({ error: 'Unauthorized' });

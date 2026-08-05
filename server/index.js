@@ -22,8 +22,8 @@ const PORT = process.env.PORT || 3000;
 const JWT_SECRET = process.env.JWT_SECRET || 'dev-insecure-secret-change-me';
 const DEALFINDER_COUPON_CODE = process.env.DEALFINDER_COUPON_CODE || 'CASHFLOW35';
 // Dedicated Zap for qualified-lead routing (onboarding_form_completed only).
-const ONBOARDING_FORM_WEBHOOK_URL =
-  process.env.ONBOARDING_FORM_WEBHOOK_URL || 'https://hooks.zapier.com/hooks/catch/22006156/46swuj9/';
+// URL lives in Railway env only -- never hardcode a webhook URL in source.
+const ONBOARDING_FORM_WEBHOOK_URL = process.env.ONBOARDING_FORM_WEBHOOK_URL || '';
 
 // Refuse to boot in production with the insecure fallback secret — a missing
 // JWT_SECRET in prod would let anyone forge login tokens.
@@ -145,6 +145,7 @@ function postWebhooks(payload) {
 // Zap (ONBOARDING_FORM_WEBHOOK_URL) -- it does NOT fan out through
 // ONBOARDING_WEBHOOK_URLS/postWebhooks like account_created does.
 function notifyOnboardingWebhooks({ user, winner, answers, answerLabels, lowFidelity }) {
+  if (!ONBOARDING_FORM_WEBHOOK_URL) return;
   const band = qualBand(answers, lowFidelity);
   fetch(ONBOARDING_FORM_WEBHOOK_URL, {
     method: 'POST',

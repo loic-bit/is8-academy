@@ -21,6 +21,9 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PORT = process.env.PORT || 3000;
 const JWT_SECRET = process.env.JWT_SECRET || 'dev-insecure-secret-change-me';
 const DEALFINDER_COUPON_CODE = process.env.DEALFINDER_COUPON_CODE || 'CASHFLOW35';
+// Dedicated Zap for qualified-lead routing (onboarding_form_completed only).
+const ONBOARDING_FORM_WEBHOOK_URL =
+  process.env.ONBOARDING_FORM_WEBHOOK_URL || 'https://hooks.zapier.com/hooks/catch/22006156/46swuj9/';
 
 // Refuse to boot in production with the insecure fallback secret — a missing
 // JWT_SECRET in prod would let anyone forge login tokens.
@@ -138,21 +141,28 @@ function postWebhooks(payload) {
   }
 }
 
+// onboarding_form_completed is routed only to its dedicated qualified-lead
+// Zap (ONBOARDING_FORM_WEBHOOK_URL) -- it does NOT fan out through
+// ONBOARDING_WEBHOOK_URLS/postWebhooks like account_created does.
 function notifyOnboardingWebhooks({ user, winner, answers, answerLabels, lowFidelity }) {
   const band = qualBand(answers, lowFidelity);
-  postWebhooks({
-    event: 'onboarding_form_completed',
-    at: new Date().toISOString(),
-    userId: user.id,
-    name: user.name,
-    email: user.email,
-    phone: user.phone || '',
-    profile: winner,
-    qualification: { code: band.code, label: band.label },
-    dfySignal: dfySignal(answers),
-    answers,
-    answerLabels,
-  });
+  fetch(ONBOARDING_FORM_WEBHOOK_URL, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({
+      event: 'onboarding_form_completed',
+      at: new Date().toISOString(),
+      userId: user.id,
+      name: user.name,
+      email: user.email,
+      phone: user.phone || '',
+      profile: winner,
+      qualification: { code: band.code, label: band.label },
+      dfySignal: dfySignal(answers),
+      answers,
+      answerLabels,
+    }),
+  }).catch((e) => console.warn('[webhook]', e.message));
 }
 
 // Fire-and-forget server-side event. Analytics must never fail a request.
